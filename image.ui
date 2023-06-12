@@ -124,19 +124,6 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="2">
-      <widget class="QSpinBox" name="_end_y">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>2080</number>
-       </property>
-       <property name="value">
-        <number>1040</number>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="1">
       <widget class="QSpinBox" name="_binx">
        <property name="minimum">
@@ -163,6 +150,33 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="2">
+      <widget class="QSpinBox" name="_end_y">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>2080</number>
+       </property>
+       <property name="value">
+        <number>1040</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Exposure</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Intensifier &amp; Gain</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="2">
       <widget class="QSpinBox" name="_ori_y">
        <property name="maximum">
@@ -173,10 +187,10 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_5">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Exposure</string>
+        <string>Image End (X, Y)</string>
        </property>
       </widget>
      </item>
@@ -199,30 +213,6 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Image End (X, Y)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Intensifier &amp; Gain</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="2">
-      <widget class="QSpinBox" name="_gain">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>100</number>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QSpinBox" name="_end_x">
        <property name="minimum">
@@ -233,6 +223,16 @@
        </property>
        <property name="value">
         <number>1390</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QSpinBox" name="_gain">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
        </property>
       </widget>
      </item>
@@ -274,6 +274,20 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Bin (X,Y)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Trigger</string>
+       </property>
+      </widget>
+     </item>
      <item row="4" column="1">
       <widget class="QSpinBox" name="_intensifier">
        <property name="minimum">
@@ -284,33 +298,6 @@
        </property>
        <property name="value">
         <number>50</number>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Bin (X,Y)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2">
-      <widget class="QSpinBox" name="_biny">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>1040</number>
-       </property>
-       <property name="value">
-        <number>3</number>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Trigger</string>
        </property>
       </widget>
      </item>
@@ -329,6 +316,26 @@
          <string>Free Running</string>
         </property>
        </item>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QSpinBox" name="_biny">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1040</number>
+       </property>
+       <property name="value">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="3">
+      <widget class="QPushButton" name="_update_camera">
+       <property name="text">
+        <string>Update Camera</string>
+       </property>
       </widget>
      </item>
     </layout>
@@ -419,7 +426,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>350</y>
+      <y>360</y>
       <width>281</width>
       <height>91</height>
      </rect>
@@ -535,7 +542,7 @@
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>500</y>
+      <y>490</y>
       <width>141</width>
       <height>23</height>
      </rect>
@@ -547,9 +554,9 @@
    <widget class="QLabel" name="label_12">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>50</x>
       <y>20</y>
-      <width>251</width>
+      <width>211</width>
       <height>20</height>
      </rect>
     </property>
@@ -561,9 +568,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>250</y>
+      <y>260</y>
       <width>281</width>
-      <height>84</height>
+      <height>91</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -597,13 +604,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QCheckBox" name="_save_box">
-         <property name="text">
-          <string>Save Data?</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QLineEdit" name="_file_name">
          <property name="text">
@@ -614,11 +614,22 @@
       </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="_update_camera">
-       <property name="text">
-        <string>Update Camera</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QCheckBox" name="_save_box">
+         <property name="text">
+          <string>Save cumulative</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="_save_box_2">
+         <property name="text">
+          <string>Save every frame</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -736,7 +747,9 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_setup"/>
+    <addaction name="_save_setup"/>
+    <addaction name="_load_setup"/>
+    <addaction name="_load_defaults"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -745,9 +758,19 @@
     <string>Mark</string>
    </property>
   </action>
-  <action name="actionSave_setup">
+  <action name="_save_setup">
    <property name="text">
     <string>Save setup</string>
+   </property>
+  </action>
+  <action name="_load_setup">
+   <property name="text">
+    <string>Load setup</string>
+   </property>
+  </action>
+  <action name="_load_defaults">
+   <property name="text">
+    <string>Load defaults</string>
    </property>
   </action>
  </widget>

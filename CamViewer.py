@@ -6,6 +6,7 @@ import time
 
 import ctypes
 import h5py
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -81,14 +82,42 @@ class run_camera(QtCore.QObject):
         self._isRunning = False
         self._window = window
 
-    def save_data(self,filename,array):
-        with h5py.File(filename, 'w') as hf:
-            hf.create_dataset('Intensity', 
-                data=array, 
-                compression="gzip", 
-                chunks=True,
-                maxshape=(array.shape)
-            )
+    def save_data(self,filename,cml_array,frm_array=None):
+        '''
+        This function is called before camera runs and every 30 seconds.
+
+        On the first instance it makes the cumulative and frames datasets.
+
+        On subsequent calls it appends frames to the frame dataset and 
+        overwrites the cumulative dataset.
+        '''
+        height, width = cml_array.shape
+        count = frm_array.shape[0]
+        if os.path.exists(filename):
+            with h5py.File(filename, 'a') as hf:
+                #Append frames to frames dataset
+                if self._window._save_box_2().isChecked():
+                    hf['Frames'].resize((hf['Frames'].shape[0] + count), axis=0)
+                    hf['Frames'][-count:] = frm_array
+                #Overwrite cumulative array
+                if self._window._save_box().isChecked():
+                    data = hf['Cumulative']
+                    data[...] = cml_array
+
+        else:
+            with h5py.File(filename, 'w') as hf:
+                hf.create_dataset('Cumulative', 
+                    data=cml_array, 
+                    compression="gzip", 
+                    chunks=True,
+                    maxshape=(height,width)
+                )
+                hf.create_dataset('Frames', 
+                    data=cml_array, 
+                    compression="gzip", 
+                    chunks=True,
+                    maxshape=(None,height,width)
+                )
 
     def task(self):
         if not self._isRunning:
@@ -128,9 +157,10 @@ class run_camera(QtCore.QObject):
         start = time.time()
         save_timer = time.time()
 
-        #Cumulative image array
-        cml_image = np.zeros((height,width),dtype=np.int16)
+        #Make image arrays to store data
+        cml_image = np.zeros((height,width),dtype=np.float32)
         shot_image = np.zeros((height,width),dtype=np.int16)
+        frm_image = []
 
         #If the user is saving data write the empty array to the file
         if self._window._save_box.isChecked():
@@ -141,12 +171,13 @@ class run_camera(QtCore.QObject):
             #Save data every 30 seconds to reduce disk writes
             if time.time() - save_timer > 30:
                 if self._window._save_box.isChecked():
-                    self.save_data(filename,cml_image)
+                    self.save_data(filename,cml_image,frm_image)
+                frm_image = [] #Remove all frames from storage
                 save_timer = time.time()
 
             #If the user wants to refresh the cumulative image clear array
             if self._window._reset_cml == True:
-                cml_image = np.zeros((height,width),dtype=np.int16)
+                cml_image = np.zeros((height,width),dtype=np.float32)
                 shot_image = np.zeros((height,width),dtype=np.int16)
                 self._window._reset_cml = False        
 
@@ -194,6 +225,7 @@ class run_camera(QtCore.QObject):
                     else:
                         shot_image += image
                 shot_number+=1
+                frm_image.append(image)
 
                 #If the user wants to look at a cumulative image or shot on and shot off
                 if self._window._view.currentIndex() == 1:
@@ -255,14 +287,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #If the user goes of the limits for the camera change limits
         #so that the camera doesnt softlock and require a restart
-        self._ori_x.valueChanged.connect(lambda: self.subarea_changed(0))
-        self._end_x.valueChanged.connect(lambda: self.subarea_changed(1))
-        self._ori_y.valueChanged.connect(lambda: self.subarea_changed(2))
-        self._end_y.valueChanged.connect(lambda: self.subarea_changed(3))
+        # self._ori_x.valueChanged.connect(lambda: self.subarea_changed(0))
+        # self._end_x.valueChanged.connect(lambda: self.subarea_changed(1))
+        # self._ori_y.valueChanged.connect(lambda: self.subarea_changed(2))
+        # self._end_y.valueChanged.connect(lambda: self.subarea_changed(3))
 
         self._button.setDisabled(True)
-        #self._save_setup.triggered.connect(self.save_setup)
-        #self.load_setup()
+        self._save_setup.triggered.connect(self.save_setup)
+        self._load_setup.triggered.connect(lambda: self.load_setup(0))
+        self._load_defaults.triggered.connect(lambda: self.load_setup(1))
 
     def subarea_changed(self,value):
         '''
@@ -270,6 +303,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         The camera has a maximum resolution of 1390 by 1040 anything
         above those limits softlocks the camera, requiring a restart.
+
+        This function currently does not work well for users, need to fix
         '''
         ox = self._ori_x.value()
         ex = self._end_x.value()
@@ -329,6 +364,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._path_button.setDisabled(value)
         self._save_box.setDisabled(value)
         self._update_camera.setDisabled(value)
+        self._dir_name.setDisabled(value)
+        self._path_button.setDisabled(value)
+        self._file_name.setDisabled(value)
+        self._save_box.setDisabled(value)
+        self._save_box_2.setDisabled(value)
 
     def rotate_camera(self,option):
         #Rotate clockwise
@@ -345,38 +385,46 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._reset_cml == False:
             self._reset_cml = True
 
-    '''
     def save_setup(self):
         setup_file = os.path.join(fd,'setup.json')
         setup = {
             '_ori_x' : self._ori_x.value(),
             '_ori_y' : self._ori_y.value(),
+            '_end_x' : self._end_x.value(),
+            '_end_y' : self._end_y.value(),
             '_binx' : self._binx.value(),
             '_biny' : self._biny.value(),
-            '_width' : self._width.value(),
-            '_height' : self._height.value(),
             '_exposure' : self._exposure.value(),
-            '_minimum' : self._minimum.value(),
-            '_maximum' : self._maximum.value(),
-            '_rotation' : self._rotation,
-            '_colourmap' : self._colourmap.currentText(),
-            '_trigger' : self._trigger.currentText(),
-            '_trigger_delay' : self._trigger_delay.value()
+            '_intensifier' : self._intensifier.value(),
+            '_gain' : self._gain.value(),
+            '_trigger' : self._trigger.currentIndex(),
+            '_dir_name' : self._dir_name.text(),
+            '_file_name' : self._file_name.text(),
+            '_colourmap' : self._colourmap.currentIndex(),
+            '_min_intensity' : self._min_intensity.value(),
+            '_max_intensity' : self._max_intensity.value(),
+            '_rotation' : self._rotation
         }
         with open(setup_file, 'w', encoding='utf-8') as f:
-            json.dump(setup, f, ensure_ascii=False, indent=4)  
+            json.dump(setup, f, ensure_ascii=False, indent=4)
 
-    def load_setup(self):
-        #Check if user has saved settings, if so load them.
-        setup_file = os.path.join(fd,'setup.json')
+    def load_setup(self,type):
+        if type == 0:
+            setup_file = os.path.join(fd,'setup.json')
+        else:
+            setup_file = os.path.join(fd,'defaults.json')
         if os.path.isfile(setup_file) == True:
             with open(setup_file, 'r') as f:
                 setup = json.load(f)
                 for key in setup:
-                    print(getattr(self, key).__class__.__name__)
-                    try: getattr(self, key).setValue(setup[key])
-                    except AttributeError: print(key)
-    '''
+                    if getattr(self, key).__class__.__name__ == 'QSpinBox':
+                        getattr(self, key).setValue(setup[key])
+                    if getattr(self, key).__class__.__name__ == 'QComboBox':
+                        getattr(self, key).setCurrentIndex(setup[key])
+                    if getattr(self, key).__class__.__name__ == 'QLineEdit':
+                        getattr(self, key).setText(setup[key])
+                    if getattr(self, key).__class__.__name__ == 'int':
+                        getattr(self, key)
 
     def update_camera(self):
         #Disable the run button until parameters are updated
@@ -397,7 +445,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print(fdimini.PSL_VHR_Set_subarea_and_binning(
             self._ori_x.value(), self._ori_y.value(), self._end_x.value(),
             self._end_y.value(), self._binx.value(), self._biny.value()
-        ))
+        ))                                                                                              
         #These commands are possible but not used in the labview
         #Pixel offset
         #fdimini.PSL_VHR_enable_offset_subtraction(param['offset'])
